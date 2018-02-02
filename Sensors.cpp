@@ -1515,6 +1515,41 @@ inline void Sonar_init() {}
 void Sonar_update() {}
 #endif
 
+#if defined(LIDAR_LITE_V3_i2c)
+
+#define    LIDARLite_ADDRESS   0x62          // Default I2C Address of LIDAR-Lite.
+#define    RegisterMeasure     0x00          // Register to write to initiate ranging.
+#define    MeasureValue        0x04          // Value to initiate ranging.
+#define    RegisterHighLowB    0x8f          // Register to get both High and Low bytes in 1 call.
+
+void Lidar_update()
+{
+    i2c_rep_start(LIDARLite_ADDRESS << 1);
+    i2c_write(RegisterMeasure);
+    i2c_write(MeasureValue);
+    i2c_stop();
+
+    i2c_rep_start(LIDARLite_ADDRESS << 1);
+    i2c_write(RegisterHighLowB);
+    i2c_stop();
+
+    i2c_rep_start((LIDARLite_ADDRESS << 1) | 1);
+    LidarAlt = i2c_readAck();
+    LidarAlt = LidarAlt << 8;
+    LidarAlt |= i2c_readNak();
+
+    float temp = cos((float(att.angle[1])/10)*0.0174532925f) * cos((float(att.angle[0])/10)*0.0174532925f);
+
+    temp = max(temp+0.05, 0.707);
+    temp = constrain(temp,0.707,1.0);
+    temp = (float)LidarAlt * temp;
+    LidarAlt = temp;
+
+    debug[2] = LidarAlt;
+}
+#else
+void Lidar_update() {}
+#endif
 
 void initS() {
   i2c_init();

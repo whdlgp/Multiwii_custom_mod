@@ -165,6 +165,7 @@ uint8_t  vbatMin = VBATNOMINAL;  // lowest battery voltage in 0.1V steps
 uint8_t  rcOptions[CHECKBOXITEMS];
 int32_t  AltHold; // in cm
 int16_t  sonarAlt;
+int32_t  LidarAlt;
 int16_t  BaroPID = 0;
 int16_t  errorAltitudeI = 0;
 
@@ -1266,6 +1267,9 @@ void loop () {
         #endif
         #ifdef VARIOMETER
           if (f.VARIO_MODE) vario_signaling();
+        #endif
+        #if LIDAR_LITE
+          Lidar_update();
         #endif
         break;
     }

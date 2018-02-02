@@ -1695,6 +1695,12 @@
   #define SONAR 0
 #endif
 
+#if defined(LIDAR_LITE_V3_i2c)
+  #define LIDAR_LITE 1
+#else
+  #define LIDAR_LITE 0
+#endif
+
 #if defined(EXTENDED_AUX_STATES)
   #define EXTAUX 1
 #else

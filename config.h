@@ -200,6 +200,9 @@
       //#define SRF10
       //#define SRF23
 
+      /* Lidar Lite v3 */ //for distance check and using with BARO mode
+      #define LIDAR_LITE_V3_i2c //use Lidar Lite v3 with i2c
+
       /* ADC accelerometer */ // for 5DOF from sparkfun, uses analog PIN A1/A2/A3
       //#define ADCACC
 

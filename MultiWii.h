@@ -26,6 +26,7 @@ extern uint8_t  vbatMin;
 extern uint8_t  rcOptions[CHECKBOXITEMS];
 extern int32_t  AltHold;
 extern int16_t  sonarAlt;
+extern int32_t  LidarAlt;
 extern int16_t  BaroPID;
 extern int16_t  errorAltitudeI;
 
