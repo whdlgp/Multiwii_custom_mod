@@ -7,6 +7,10 @@
 uint8_t getEstimatedAltitude();
 #endif
 
+#if LIDAR_LITE
+uint8_t getEstimatedAltitude_Lidar();
+#endif
+
 void computeIMU();
 int32_t mul(int16_t a, int16_t b);
 

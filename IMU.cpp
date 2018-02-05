@@ -353,3 +353,55 @@ uint8_t getEstimatedAltitude(){
   return 1;
 }
 #endif //BARO
+
+#if LIDAR_LITE
+uint8_t getEstimatedAltitude_Lidar(){
+  static float vel = 0.0f;
+  static uint16_t previousT;
+  uint16_t currentT = micros();
+  uint16_t dTime;
+
+  dTime = currentT - previousT;
+  if (dTime < UPDATE_INTERVAL) return 0;
+  previousT = currentT;
+
+  alt.EstAlt = LidarAlt;
+
+  //P
+  int16_t error16 = constrain(LidarAltHold - alt.EstAlt, -300, 300);
+  applyDeadband(error16, 10); //remove small P parametr to reduce noise near zero position
+  LidarPID = constrain((conf.pid[PIDALT].P8 * error16 >>7), -150, +150);
+
+  //I
+  errorAltitudeI_Lidar += conf.pid[PIDALT].I8 * error16 >>6;
+  errorAltitudeI_Lidar = constrain(errorAltitudeI_Lidar,-30000,30000);
+  LidarPID += errorAltitudeI_Lidar>>9; //I in range +/-60
+
+  applyDeadband(accZ, ACC_Z_DEADBAND);
+
+  static int32_t lastLidarAlt;
+  // could only overflow with a difference of 320m, which is highly improbable here
+  int16_t LidarVel = mul((alt.EstAlt - lastLidarAlt) , (1000000 / UPDATE_INTERVAL));
+
+  lastLidarAlt = alt.EstAlt;
+
+  LidarVel = constrain(LidarVel, -300, 300); // constrain baro velocity +/- 300cm/s
+  applyDeadband(LidarVel, 10); // to reduce noise near zero
+
+  // Integrator - velocity, cm/sec
+  vel += accZ * ACC_VelScale * dTime;
+
+  // apply Complimentary Filter to keep the calculated velocity based on baro velocity (i.e. near real velocity).
+  // By using CF it's possible to correct the drift of integrated accZ (velocity) without loosing the phase, i.e without delay
+  vel = vel * 0.985f + LidarVel * 0.015f;
+
+  //D
+  alt.vario = vel;
+  applyDeadband(alt.vario, 5);
+  LidarPID -= constrain(conf.pid[PIDALT].D8 * alt.vario >>4, -150, 150);
+
+  debug[3] = LidarPID;
+
+  return 1;
+}
+#endif //LIDAR_LITE

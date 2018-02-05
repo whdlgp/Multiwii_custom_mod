@@ -27,6 +27,9 @@ extern uint8_t  rcOptions[CHECKBOXITEMS];
 extern int32_t  AltHold;
 extern int16_t  sonarAlt;
 extern int32_t  LidarAlt;
+extern int32_t  LidarAltHold;
+extern int32_t  LidarPID;
+extern int16_t  errorAltitudeI_Lidar;
 extern int16_t  BaroPID;
 extern int16_t  errorAltitudeI;
 

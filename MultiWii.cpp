@@ -166,6 +166,9 @@ uint8_t  rcOptions[CHECKBOXITEMS];
 int32_t  AltHold; // in cm
 int16_t  sonarAlt;
 int32_t  LidarAlt;
+int32_t  LidarAltHold;
+int32_t  LidarPID = 0;
+int16_t  errorAltitudeI_Lidar = 0;
 int16_t  BaroPID = 0;
 int16_t  errorAltitudeI = 0;
 
@@ -1084,6 +1087,12 @@ void loop () {
           if (!f.BARO_MODE) {
             f.BARO_MODE = 1;
             AltHold = alt.EstAlt;
+
+            #if LIDAR_LITE
+            LidarAltHold = 100; //100cm, 1m
+            LidarPID = 0;
+            #endif
+
             #if defined(ALT_HOLD_THROTTLE_MIDPOINT)
               initialThrottleHold = ALT_HOLD_THROTTLE_MIDPOINT;
             #else
@@ -1246,7 +1255,7 @@ void loop () {
         #endif
       case 2:
         taskOrder++;
-        #if BARO
+        #if BARO && (!LIDAR_LITE)
           if (getEstimatedAltitude() != 0) break; // 280 us
         #endif    
       case 3:
@@ -1270,6 +1279,7 @@ void loop () {
         #endif
         #if LIDAR_LITE
           Lidar_update();
+          getEstimatedAltitude_Lidar();
         #endif
         break;
     }
@@ -1343,6 +1353,7 @@ void loop () {
       }
     }
     #endif
+    #if (!LIDAR_LITE)
     //IF Throttle not ignored then allow change altitude with the stick....
     if ( (abs(rcCommand[THROTTLE]-initialThrottleHold)>ALT_HOLD_THROTTLE_NEUTRAL_ZONE) && !f.THROTTLE_IGNORED) {
       // Slowly increase/decrease AltHold proportional to stick movement ( +100 throttle gives ~ +50 cm in 1 second with cycle time about 3-4ms)
@@ -1357,6 +1368,10 @@ void loop () {
       isAltHoldChanged = 0;
     }
     rcCommand[THROTTLE] = initialThrottleHold + BaroPID;
+    #else
+    rcCommand[THROTTLE] = initialThrottleHold + LidarPID;
+    #endif
+
   }
   #endif //BARO
 
