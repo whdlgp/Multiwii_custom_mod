@@ -54,6 +54,8 @@
 #define MSP_TRIM_DOWN            154
 #define MSP_TRIM_LEFT            155
 #define MSP_TRIM_RIGHT           156
+#define MSP_SENSORS              157
+#define MSP_SET_TINY_RC          158
 //--------------add for Serial remote control end------------//
 
 #define MSP_SET_RAW_RC           200   //in message          8 rc chan
@@ -296,10 +298,56 @@ void evaluateCommand(uint8_t c) {
       conf.angleTrim[ROLL]-=1;
       writeParams(1);
       break;
-  	case MSP_TRIM_RIGHT:
+  	 case MSP_TRIM_RIGHT:
       conf.angleTrim[ROLL]+=1;
       writeParams(1);
       break;
+  	 case MSP_SENSORS:
+  	  struct {
+  	    uint8_t arm_status;
+  	    uint8_t baro_mode_status;
+  	    int16_t angle[2];            // absolute angle inclination in multiple of 0.1 degree    180 deg = 1800
+  	    int16_t heading;             // variometer in cm/s
+  	    int32_t height;              // in cm
+  	    int16_t accSmooth[3];
+  	    int16_t gyroData[3];
+  	    int16_t rcData[5];           // interval [1000;2000]
+  	    int16_t debug[4];
+      } sensor;
+      sensor.arm_status = f.ARMED;
+      sensor.baro_mode_status = f.BARO_MODE;
+      sensor.angle[0] = att.angle[0];
+      sensor.angle[1] = att.angle[1];
+      sensor.heading = att.heading;
+      sensor.height = alt.EstAlt;
+      sensor.accSmooth[0] = imu.accSmooth[0];
+      sensor.accSmooth[1] = imu.accSmooth[1];
+      sensor.accSmooth[2] = imu.accSmooth[2];
+      sensor.gyroData[0] = imu.gyroData[0];
+      sensor.gyroData[1] = imu.gyroData[1];
+      sensor.gyroData[2] = imu.gyroData[2];
+      sensor.rcData[0] = rcData[0];
+      sensor.rcData[1] = rcData[1];
+      sensor.rcData[2] = rcData[2];
+      sensor.rcData[3] = rcData[3];
+      sensor.rcData[4] = rcData[4];
+      sensor.debug[0] = debug[0];
+      sensor.debug[1] = debug[1];
+      sensor.debug[2] = debug[2];
+      sensor.debug[3] = debug[3];
+      s_struct((uint8_t*)&sensor,42);
+      break;
+
+ 	 case MSP_SET_TINY_RC:
+  	   uint8_t tiny_rc[5];
+  	   s_struct_w(tiny_rc,5);
+  	   rcSerial[0] = 1000+(tiny_rc[0] << 2);
+  	   rcSerial[1] = 1000+(tiny_rc[1] << 2);
+  	   rcSerial[2] = 1000+(tiny_rc[2] << 2);
+  	   rcSerial[3] = 1000+(tiny_rc[3] << 2);
+  	   rcSerial[4] = 1000+(tiny_rc[4] << 2);
+  	   rcSerialCount = 50; // 1s transition
+  	  break;
     //--------------add for Serial remote control end------------//
 
   	case MSP_SET_RAW_RC:
