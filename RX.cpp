@@ -476,13 +476,16 @@ void computeRC() {
       #if defined(SPEKTRUM) || defined(SBUS) || defined(SUMD) // no averaging for Spektrum & SBUS & SUMD signal
         if(failsafeGoodCondition)  rcData[chan] = rcDataTmp;
       #else
-        if(failsafeGoodCondition) {
-          rcDataMean = rcDataTmp;
-          for (a=0;a<AVERAGING_ARRAY_LENGTH-1;a++) rcDataMean += rcData4Values[chan][a];
-          rcDataMean = (rcDataMean+(AVERAGING_ARRAY_LENGTH/2))/AVERAGING_ARRAY_LENGTH;
-          if ( rcDataMean < (uint16_t)rcData[chan] -3)  rcData[chan] = rcDataMean+2;
-          if ( rcDataMean > (uint16_t)rcData[chan] +3)  rcData[chan] = rcDataMean-2;
-          rcData4Values[chan][rc4ValuesIndex] = rcDataTmp;
+        if(rcSerialCount == 0)
+        {
+          if(failsafeGoodCondition) {
+            rcDataMean = rcDataTmp;
+            for (a=0;a<AVERAGING_ARRAY_LENGTH-1;a++) rcDataMean += rcData4Values[chan][a];
+            rcDataMean = (rcDataMean+(AVERAGING_ARRAY_LENGTH/2))/AVERAGING_ARRAY_LENGTH;
+            if ( rcDataMean < (uint16_t)rcData[chan] -3)  rcData[chan] = rcDataMean+2;
+            if ( rcDataMean > (uint16_t)rcData[chan] +3)  rcData[chan] = rcDataMean-2;
+            rcData4Values[chan][rc4ValuesIndex] = rcDataTmp;
+          }
         }
       #endif
       if (chan<8 && rcSerialCount > 0) { // rcData comes from MSP and overrides RX Data until rcSerialCount reaches 0
