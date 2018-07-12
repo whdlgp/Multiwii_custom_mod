@@ -1090,6 +1090,7 @@ void loop () {
 
             #if LIDAR_LITE
             LidarAltHold = 100; //100cm, 1m
+            errorAltitudeI_Lidar = 0;
             LidarPID = 0;
             #endif
 
