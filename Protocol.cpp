@@ -56,6 +56,8 @@
 #define MSP_TRIM_RIGHT           156
 #define MSP_SENSORS              157
 #define MSP_SET_TINY_RC          158
+
+#define MSP_TEST                 159   //for checking error while serial communication, stress test of sending/receiving MSP 
 //--------------add for Serial remote control end------------//
 
 #define MSP_SET_RAW_RC           200   //in message          8 rc chan
@@ -348,6 +350,19 @@ void evaluateCommand(uint8_t c) {
   	   rcSerial[4] = 1000+(tiny_rc[4] << 2);
   	   rcSerialCount = 50; // 1s transition
   	  break;
+   case MSP_TEST:
+      uint8_t i;
+      uint8_t test_received_size;
+      test_received_size = read8();
+
+      headSerialReply(test_received_size+2);
+      serialize16(cycleTime);
+      for(i = 0; i < test_received_size; i++)
+      {
+        serialize8((uint8_t)0);
+      }
+      tailSerialReply();
+      break;
     //--------------add for Serial remote control end------------//
 
   	case MSP_SET_RAW_RC:
