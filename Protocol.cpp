@@ -272,6 +272,56 @@ void serialCom() {
   } // for
 }
 
+static uint8_t is_send_sensor_data = 0;
+static uint8_t host_port = 0;
+static uint8_t host_command = 0;
+void serialSendSensorData()
+{
+  if(is_send_sensor_data)
+  {
+    struct {
+    uint8_t arm_status;
+    uint8_t baro_mode_status;
+    int16_t angle[2];            // absolute angle inclination in multiple of 0.1 degree    180 deg = 1800
+    int16_t heading;             // variometer in cm/s
+    int32_t height;              // in cm
+    int16_t accSmooth[3];
+    int16_t gyroData[3];
+    int16_t rcData[5];           // interval [1000;2000]
+    int16_t debug[4];
+    } sensor;
+
+    sensor.arm_status = f.ARMED;
+    sensor.baro_mode_status = f.BARO_MODE;
+    sensor.angle[0] = att.angle[0];
+    sensor.angle[1] = att.angle[1];
+    sensor.heading = att.heading;
+    sensor.height = alt.EstAlt;
+    sensor.accSmooth[0] = imu.accSmooth[0];
+    sensor.accSmooth[1] = imu.accSmooth[1];
+    sensor.accSmooth[2] = imu.accSmooth[2];
+    sensor.gyroData[0] = imu.gyroData[0];
+    sensor.gyroData[1] = imu.gyroData[1];
+    sensor.gyroData[2] = imu.gyroData[2];
+    sensor.rcData[0] = rcData[0];
+    sensor.rcData[1] = rcData[1];
+    sensor.rcData[2] = rcData[2];
+    sensor.rcData[3] = rcData[3];
+    sensor.rcData[4] = rcData[4];
+    sensor.debug[0] = debug[0];
+    sensor.debug[1] = debug[1];
+    sensor.debug[2] = debug[2];
+    sensor.debug[3] = debug[3];
+
+    CURRENTPORT = host_port;
+    cmdMSP[CURRENTPORT] = host_command;
+
+    uint32_t start_time = micros();
+    s_struct((uint8_t*)&sensor,42);
+    debug[0] = micros() - start_time;
+  }
+}
+
 void evaluateCommand(uint8_t c) {
   uint32_t tmp=0; 
 
@@ -305,39 +355,9 @@ void evaluateCommand(uint8_t c) {
       writeParams(1);
       break;
   	 case MSP_SENSORS:
-  	  struct {
-  	    uint8_t arm_status;
-  	    uint8_t baro_mode_status;
-  	    int16_t angle[2];            // absolute angle inclination in multiple of 0.1 degree    180 deg = 1800
-  	    int16_t heading;             // variometer in cm/s
-  	    int32_t height;              // in cm
-  	    int16_t accSmooth[3];
-  	    int16_t gyroData[3];
-  	    int16_t rcData[5];           // interval [1000;2000]
-  	    int16_t debug[4];
-      } sensor;
-      sensor.arm_status = f.ARMED;
-      sensor.baro_mode_status = f.BARO_MODE;
-      sensor.angle[0] = att.angle[0];
-      sensor.angle[1] = att.angle[1];
-      sensor.heading = att.heading;
-      sensor.height = alt.EstAlt;
-      sensor.accSmooth[0] = imu.accSmooth[0];
-      sensor.accSmooth[1] = imu.accSmooth[1];
-      sensor.accSmooth[2] = imu.accSmooth[2];
-      sensor.gyroData[0] = imu.gyroData[0];
-      sensor.gyroData[1] = imu.gyroData[1];
-      sensor.gyroData[2] = imu.gyroData[2];
-      sensor.rcData[0] = rcData[0];
-      sensor.rcData[1] = rcData[1];
-      sensor.rcData[2] = rcData[2];
-      sensor.rcData[3] = rcData[3];
-      sensor.rcData[4] = rcData[4];
-      sensor.debug[0] = debug[0];
-      sensor.debug[1] = debug[1];
-      sensor.debug[2] = debug[2];
-      sensor.debug[3] = debug[3];
-      s_struct((uint8_t*)&sensor,42);
+      host_port = CURRENTPORT;
+      host_command = MSP_SENSORS;
+      is_send_sensor_data = 1;
       break;
 
  	 case MSP_SET_TINY_RC:
@@ -353,11 +373,14 @@ void evaluateCommand(uint8_t c) {
    case MSP_TEST:
       uint8_t i;
       uint8_t test_received_size;
+      uint16_t test_count;
       test_received_size = read8();
+      test_count = read16();
 
-      headSerialReply(test_received_size+2);
+      headSerialReply(test_received_size);
       serialize16(cycleTime);
-      for(i = 0; i < test_received_size; i++)
+      serialize16(test_count);
+      for(i = 0; i < (test_received_size-4); i++)
       {
         serialize8((uint8_t)0);
       }
@@ -367,7 +390,7 @@ void evaluateCommand(uint8_t c) {
 
   	case MSP_SET_RAW_RC:
       s_struct_w((uint8_t*)&rcSerial,16);
-      rcSerialCount = 50; // 1s transition 
+      rcSerialCount = 255; // 1s transition 
       break;
     case MSP_SET_PID:
       mspAck();
