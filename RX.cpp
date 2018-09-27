@@ -464,7 +464,12 @@ void computeRC() {
   static uint8_t rc4ValuesIndex = 0;
   uint8_t chan,a;
   uint8_t failsafeGoodCondition = 1;
-
+#ifdef USE_MSP_ONLY
+  for (chan = 0; chan < RC_CHANS; chan++)
+  {
+    rcData[chan] = rcSerial[chan];
+  }
+#else
   #if !defined(OPENLRSv2MULTI)
     rc4ValuesIndex++;
     if (rc4ValuesIndex == AVERAGING_ARRAY_LENGTH-1) rc4ValuesIndex = 0;
@@ -497,6 +502,7 @@ void computeRC() {
       }
     }
   #endif
+#endif
 }
 
 

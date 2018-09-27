@@ -206,6 +206,9 @@
       /* Lidar Lite v3 */ //for distance check and using with BARO mode
       #define LIDAR_LITE_V3_i2c //use Lidar Lite v3 with i2c
 
+      /* USE MSP protocol as a main protocol, disable other features */
+      #define USE_MSP_ONLY
+
       /* ADC accelerometer */ // for 5DOF from sparkfun, uses analog PIN A1/A2/A3
       //#define ADCACC
 

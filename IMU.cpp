@@ -24,7 +24,6 @@ void computeIMU () {
   for (axis = 0; axis < 3; axis++)
     gyroADCinter[axis] =  imu.gyroADC[axis];
   timeInterleave=micros();
-  annexCode();
   uint8_t t=0;
   while((int16_t)(micros()-timeInterleave)<650) t=1; //empirical, interleaving delay between 2 consecutive reads
   #ifdef LCD_TELEMETRY

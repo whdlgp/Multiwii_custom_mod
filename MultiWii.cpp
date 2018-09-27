@@ -570,10 +570,6 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
     }
   }
 
-  #if !(defined(SERIAL_RX) && defined(PROMINI))  //Only one serial port on ProMini.  Skip serial com if SERIAL RX in use. Note: Spek code will auto-call serialCom if GUI data detected on serial0.
-    serialCom();
-  #endif
-
   #if defined(POWERMETER)
     analog.intPowerMeterSum = (pMeter[PMOTOR_SUM]/PLEVELDIV);
     intPowerTrigger1 = conf.powerTrigger1 * PLEVELSCALE; 
@@ -871,7 +867,11 @@ void loop () {
   if (RCTime >= RC_TIME) { // 10Hz
   #endif
     previousRCTime = currentTime;
+  #if !(defined(SERIAL_RX) && defined(PROMINI))  //Only one serial port on ProMini.  Skip serial com if SERIAL RX in use. Note: Spek code will auto-call serialCom if GUI data detected on serial0.
+    serialCom();
+  #endif
     computeRC();
+    annexCode();
     // Failsafe routine - added by MIS
     #if defined(FAILSAFE)
       if ( failsafeCnt > (5*FAILSAFE_DELAY) && f.ARMED) {                  // Stabilize, and set Throttle to specified level
@@ -894,18 +894,23 @@ void loop () {
     // ------------------ STICKS COMMAND HANDLER --------------------
     // checking sticks positions
     uint8_t stTmp = 0;
-    for(i=0;i<4;i++) {
+    for(i=0;i<4;i++)
+    {
       stTmp >>= 2;
       if(rcData[i] > MINCHECK) stTmp |= 0x80;      // check for MIN
       if(rcData[i] < MAXCHECK) stTmp |= 0x40;      // check for MAX
     }
-    if(stTmp == rcSticks) {
-      if(rcDelayCommand<250) rcDelayCommand++;
-    } else rcDelayCommand = 0;
+    if(stTmp == rcSticks)
+    {
+      if(rcDelayCommand<250) 
+        rcDelayCommand++;
+    } 
+    else rcDelayCommand = 0;
     rcSticks = stTmp;
     
     // perform actions    
-    if (rcData[THROTTLE] <= MINCHECK) {            // THROTTLE at minimum
+    if (rcData[THROTTLE] <= MINCHECK) 
+    {            // THROTTLE at minimum
       #if !defined(FIXEDWING)
         errorGyroI[ROLL] = 0; errorGyroI[PITCH] = 0;
         #if PID_CONTROLLER == 1
@@ -915,19 +920,27 @@ void loop () {
         #endif
         errorAngleI[ROLL] = 0; errorAngleI[PITCH] = 0;
       #endif
-      if (conf.activate[BOXARM] > 0) {             // Arming/Disarming via ARM BOX
-        if ( rcOptions[BOXARM] && f.OK_TO_ARM ) go_arm(); else if (f.ARMED) go_disarm();
+      if (conf.activate[BOXARM] > 0) 
+      {             // Arming/Disarming via ARM BOX
+        if ( rcOptions[BOXARM] && f.OK_TO_ARM )
+          go_arm(); 
+        else if (f.ARMED) 
+          go_disarm();
       }
     }
-    if(rcDelayCommand == 20) {
-      if(f.ARMED) {                   // actions during armed
+    if(rcDelayCommand == 20)
+    {
+      if(f.ARMED) 
+      {                   // actions during armed
         #ifdef ALLOW_ARM_DISARM_VIA_TX_YAW
           if (conf.activate[BOXARM] == 0 && rcSticks == THR_LO + YAW_LO + PIT_CE + ROL_CE) go_disarm();    // Disarm via YAW
         #endif
         #ifdef ALLOW_ARM_DISARM_VIA_TX_ROLL
           if (conf.activate[BOXARM] == 0 && rcSticks == THR_LO + YAW_CE + PIT_CE + ROL_LO) go_disarm();    // Disarm via ROLL
         #endif
-      } else {                        // actions during not armed
+      }
+      else
+      {                        // actions during not armed
         i=0;
         if (rcSticks == THR_LO + YAW_LO + PIT_LO + ROL_CE) {    // GYRO calibration
           calibratingG=512;
